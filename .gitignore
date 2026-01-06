@@ -1,0 +1,28 @@
+# Common
+.idea/
+.vscode/
+*.log
+*.env
+.DS_Store
+
+# Backend (Maven)
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+backend/mvnw
+backend/mvnw.cmd
+backend/.settings/
+backend/.project/
+backend/.classpath/
+
+# Frontend (Node/React)
+frontend/node_modules/
+frontend/build/
+frontend/.pnp/
+frontend/.pnp.js
+frontend/coverage/
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# Git
+.git/

@@ -1,0 +1,62 @@
+####################################
+# Maven / Java
+####################################
+target/
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
+
+####################################
+# Maven Wrapper
+####################################
+.mvn/wrapper/maven-wrapper.jar
+
+####################################
+# Logs
+####################################
+*.log
+
+####################################
+# IDEs
+####################################
+.idea/
+*.iml
+.vscode/
+
+####################################
+# OS files
+####################################
+.DS_Store
+Thumbs.db
+
+####################################
+# Environment / Secrets
+####################################
+.env
+*.env
+application-local.properties
+application-dev.properties
+application-prod.properties
+application.properties
+
+####################################
+# Speech / ML Models (VERY IMPORTANT)
+####################################
+src/main/resources/models/
+models/
+
+####################################
+# Test / temp files
+####################################
+*.tmp
+*.bak
+*.swp
+
+####################################
+# Node (future frontend safety)
+####################################
+node_modules/
+dist/
+build/
