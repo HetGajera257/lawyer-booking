@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { removeToken } from '../utils/auth';
 import AppointmentsList from './AppointmentsList';
@@ -39,13 +39,7 @@ function LawyerDashboard() {
         }
     }, [navigate]);
 
-    // Fetch initial data based on tab
-    useEffect(() => {
-        if (activeTab === 'audio') fetchRecords();
-        if (activeTab === 'cases' && lawyerId) fetchCases();
-    }, [activeTab, lawyerId]);
-
-    const fetchCases = async () => {
+    const fetchCases = useCallback(async () => {
         if (!lawyerId) return;
         setCasesLoading(true);
         try {
@@ -62,9 +56,31 @@ function LawyerDashboard() {
         } finally {
             setCasesLoading(false);
         }
-    };
+    }, [lawyerId]);
 
-    const connectToCase = async (caseId) => {
+    const fetchRecords = useCallback(async () => {
+        setLoading(true);
+        setError('');
+
+        try {
+            const response = await audioApi.getAll();
+            setRecords(Array.isArray(response.data) ? response.data : []);
+        } catch (err) {
+            setError('Error fetching records: ' + err.message);
+            console.error('Error fetching records:', err);
+            setRecords([]);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    // Fetch initial data based on tab
+    useEffect(() => {
+        if (activeTab === 'audio') fetchRecords();
+        if (activeTab === 'cases' && lawyerId) fetchCases();
+    }, [activeTab, lawyerId, fetchRecords, fetchCases]);
+
+    const connectToCase = useCallback(async (caseId) => {
         if (!lawyerId) return;
         try {
             await casesApi.assignLawyer(caseId, lawyerId);
@@ -74,9 +90,9 @@ function LawyerDashboard() {
             console.error('Error connecting to case:', err);
             toast.error('Error connecting to case');
         }
-    };
+    }, [lawyerId, fetchCases]);
 
-    const createCaseFromAudio = async (record) => {
+    const createCaseFromAudio = useCallback(async (record) => {
         if (!lawyerId) return;
 
         // Check for userId in the record
@@ -120,23 +136,9 @@ function LawyerDashboard() {
         } finally {
             setCreatingCaseId(null);
         }
-    };
+    }, [lawyerId, fetchRecords, fetchCases]);
 
-    const fetchRecords = async () => {
-        setLoading(true);
-        setError('');
 
-        try {
-            const response = await audioApi.getAll();
-            setRecords(Array.isArray(response.data) ? response.data : []);
-        } catch (err) {
-            setError('Error fetching records: ' + err.message);
-            console.error('Error fetching records:', err);
-            setRecords([]);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleLogout = () => {
         // Stop any playing audio before logout

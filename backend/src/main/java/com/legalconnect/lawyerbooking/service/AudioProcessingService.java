@@ -32,6 +32,7 @@ public class AudioProcessingService {
     private final TextTranslationService translationService;
     private final ClientAudioRepository repository;
     private final CaseService caseService;
+    private final CaseClassificationService classificationService;
 
     @Autowired
     public AudioProcessingService(
@@ -40,13 +41,15 @@ public class AudioProcessingService {
             OpenAITextToSpeechService textToSpeechService,
             TextTranslationService translationService,
             ClientAudioRepository repository,
-            CaseService caseService) {
+            CaseService caseService,
+            CaseClassificationService classificationService) {
         this.whisperService = whisperService;
         this.maskingService = maskingService;
         this.textToSpeechService = textToSpeechService;
         this.translationService = translationService;
         this.repository = repository;
         this.caseService = caseService;
+        this.classificationService = classificationService;
     }
 
     /**
@@ -187,6 +190,11 @@ public class AudioProcessingService {
             caseRequest.setUserId(userId);
             caseRequest.setCaseTitle(title);
             caseRequest.setCaseType("General");
+            
+            // 6. Classification
+            logger.debug("Step 6: Classifying case category...");
+            String category = classificationService.classifyCase(clientAudio.getMaskedEnglishText());
+            caseRequest.setCaseCategory(category);
             
             // Generate description safely (max 500 chars)
             String description = clientAudio.getMaskedEnglishText() != null 

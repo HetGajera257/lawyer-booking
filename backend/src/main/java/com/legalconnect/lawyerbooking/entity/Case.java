@@ -26,6 +26,9 @@ public class Case {
     @Column(name = "case_status", length = 50)
     private String caseStatus = "open"; // open, in-progress, closed, on-hold
 
+    @Column(name = "case_category", length = 100)
+    private String caseCategory; // e.g., Family Law, Criminal Law, Civil Law
+
     @Lob
     @Column(name = "description", columnDefinition = "LONGTEXT")
     private String description;
@@ -108,6 +111,14 @@ public class Case {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getCaseCategory() {
+        return caseCategory;
+    }
+
+    public void setCaseCategory(String caseCategory) {
+        this.caseCategory = caseCategory;
     }
 
     public String getSolution() {

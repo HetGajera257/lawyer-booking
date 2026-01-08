@@ -10,7 +10,14 @@ import com.legalconnect.lawyerbooking.service.AuthorizationService;
 import com.legalconnect.lawyerbooking.util.JwtUtil;
 import com.legalconnect.lawyerbooking.dto.CaseDTO;
 import com.legalconnect.lawyerbooking.dto.CaseRequest;
+import com.legalconnect.lawyerbooking.dto.LawyerSearchCriteria;
+import com.legalconnect.lawyerbooking.dto.LawyerSearchResponse;
+import com.legalconnect.lawyerbooking.entity.Lawyer;
+import com.legalconnect.lawyerbooking.service.LawyerService;
 import com.legalconnect.lawyerbooking.exception.UnauthorizedException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 
 import java.util.List;
 import java.util.Map;
@@ -31,6 +38,33 @@ public class CaseController {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private LawyerService lawyerService;
+
+    @GetMapping("/ping")
+    public ResponseEntity<String> ping() {
+        return ResponseEntity.ok("CaseController is active and reachable");
+    }
+
+    @GetMapping("/lawyers/ping")
+    public ResponseEntity<String> pingLawyers() {
+        return ResponseEntity.ok("Lawyer search through CaseController is active");
+    }
+
+    @GetMapping("/lawyers/search")
+    public ResponseEntity<LawyerSearchResponse> searchLawyers(
+            LawyerSearchCriteria criteria,
+            @PageableDefault(size = 10, sort = "rating", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
+        try {
+            logger.info("Searching lawyers via CaseController: {}", criteria);
+            LawyerSearchResponse response = lawyerService.searchLawyers(criteria, pageable);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error searching lawyers: ", e);
+            return ResponseEntity.status(500).build();
+        }
+    }
+
     @PostMapping("/create")
     public ResponseEntity<CaseDTO> createCase(@RequestBody CaseRequest request) {
         try {
@@ -42,17 +76,9 @@ public class CaseController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CaseDTO> getCaseById(
-            @PathVariable Long id,
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+    public ResponseEntity<CaseDTO> getCaseById(@PathVariable Long id) {
         try {
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                throw new UnauthorizedException("Authorization token required");
-            }
-            
-            String token = authHeader.substring(7);
-            authorizationService.verifyCaseAccess(id, token);
-            
+            authorizationService.verifyCaseAccess(id);
             CaseDTO caseDTO = caseService.getCaseById(id);
             return ResponseEntity.ok(caseDTO);
         } catch (UnauthorizedException e) {
@@ -82,6 +108,12 @@ public class CaseController {
         return ResponseEntity.ok(cases);
     }
 
+    @GetMapping("/recommended/{lawyerId}")
+    public ResponseEntity<List<CaseDTO>> getRecommendedCases(@PathVariable Long lawyerId) {
+        List<CaseDTO> cases = caseService.getRecommendedCases(lawyerId);
+        return ResponseEntity.ok(cases);
+    }
+
     @PostMapping("/{caseId}/assign")
     public ResponseEntity<CaseDTO> assignLawyerToCase(
             @PathVariable Long caseId,
@@ -98,18 +130,9 @@ public class CaseController {
     @PutMapping("/{caseId}/solution")
     public ResponseEntity<CaseDTO> updateCaseSolution(
             @PathVariable Long caseId,
-            @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestBody Map<String, String> request) {
         try {
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                throw new UnauthorizedException("Authorization token required");
-            }
-            
-            String token = authHeader.substring(7);
-            Long userId = jwtUtil.extractUserId(token);
-            String userType = jwtUtil.extractUserType(token);
-            
-            authorizationService.verifyCaseUpdateAccess(caseId, userId, userType);
+            authorizationService.verifyCaseUpdateAccess(caseId);
             
             String solution = request.get("solution");
             CaseDTO caseDTO = caseService.updateCaseSolution(caseId, solution);

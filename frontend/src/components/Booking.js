@@ -3,23 +3,26 @@ import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
-import { getAuthHeaders, getUserId } from '../utils/auth';
+import { getAuthHeaders } from '../utils/auth';
 import './Booking.css';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 
-function Booking({ userId, onBookingSuccess }) {
+function Booking({ userId, onBookingSuccess, appointment = null }) {
   const [lawyers, setLawyers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+
+  const isEditing = !!appointment && !!appointment.id;
+
   const [formData, setFormData] = useState({
-    lawyerId: '',
-    appointmentDate: '',
-    appointmentTime: '',
-    durationMinutes: 60,
-    meetingType: 'video',
-    description: ''
+    lawyerId: appointment?.lawyerId || '',
+    appointmentDate: appointment?.appointmentDate ? appointment.appointmentDate.split('T')[0] : '',
+    appointmentTime: appointment?.appointmentDate ? appointment.appointmentDate.split('T')[1].substring(0, 5) : '',
+    durationMinutes: appointment?.durationMinutes || 60,
+    meetingType: appointment?.meetingType || 'video',
+    description: appointment?.description || '',
+    caseId: appointment?.caseId || ''
   });
 
   useEffect(() => {
@@ -43,7 +46,7 @@ function Booking({ userId, onBookingSuccess }) {
       }
     } catch (err) {
       console.error('Error fetching lawyers:', err);
-      const errorMsg = err.message.includes('fetch') 
+      const errorMsg = err.message.includes('fetch')
         ? 'Error loading lawyers: Cannot connect to server. Please ensure the backend is running on http://localhost:8080'
         : 'Error loading lawyers: ' + err.message;
       setError(errorMsg);
@@ -61,13 +64,11 @@ function Booking({ userId, onBookingSuccess }) {
       [name]: value
     }));
     setError('');
-    setSuccess('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setSuccess('');
     setLoading(true);
 
     try {
@@ -87,11 +88,18 @@ function Booking({ userId, onBookingSuccess }) {
         appointmentDate: appointmentDate,
         durationMinutes: parseInt(formData.durationMinutes),
         meetingType: formData.meetingType,
-        description: formData.description
+        description: formData.description,
+        caseId: formData.caseId ? parseInt(formData.caseId) : null
       };
 
-      const response = await fetch(`${API_BASE_URL}/bookings/create`, {
-        method: 'POST',
+      const url = isEditing
+        ? `${API_BASE_URL}/bookings/${appointment.id}`
+        : `${API_BASE_URL}/bookings/create`;
+
+      const method = isEditing ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method: method,
         headers: {
           ...getAuthHeaders(),
           'X-User-Id': userId.toString()
@@ -102,25 +110,28 @@ function Booking({ userId, onBookingSuccess }) {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        toast.success('Appointment booked successfully!');
-        setFormData({
-          lawyerId: '',
-          appointmentDate: '',
-          appointmentTime: '',
-          durationMinutes: 60,
-          meetingType: 'video',
-          description: ''
-        });
+        toast.success(isEditing ? 'Appointment updated successfully!' : 'Appointment booked successfully!');
+        if (!isEditing) {
+          setFormData({
+            lawyerId: '',
+            appointmentDate: '',
+            appointmentTime: '',
+            durationMinutes: 60,
+            meetingType: 'video',
+            description: '',
+            caseId: ''
+          });
+        }
         if (onBookingSuccess) {
-          onBookingSuccess();
+          onBookingSuccess(data.data);
         }
       } else {
-        const errorMsg = data.message || 'Failed to book appointment';
+        const errorMsg = data.message || 'Failed to submit appointment';
         setError(errorMsg);
         toast.error(errorMsg);
       }
     } catch (err) {
-      console.error('Error booking appointment:', err);
+      console.error('Error submitting appointment:', err);
       setError('Error connecting to server. Please try again.');
     } finally {
       setLoading(false);
@@ -133,12 +144,12 @@ function Booking({ userId, onBookingSuccess }) {
   return (
     <div className="booking-container">
       <h2>Book an Appointment</h2>
-      
+
       {error && !loading && (
         <div className="error-message">
           <span className="error-text">{error}</span>
-          <button 
-            className="error-close" 
+          <button
+            className="error-close"
             onClick={() => setError('')}
             aria-label="Close error"
           >
@@ -146,7 +157,7 @@ function Booking({ userId, onBookingSuccess }) {
           </button>
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit} className="booking-form">
         <div className="form-group">
           <label htmlFor="lawyerId">Select Lawyer *</label>
@@ -170,8 +181,8 @@ function Booking({ userId, onBookingSuccess }) {
                 ))}
               </select>
               {formData.lawyerId && (
-                <Link 
-                  to={`/lawyer/${formData.lawyerId}`} 
+                <Link
+                  to={`/lawyer/${formData.lawyerId}`}
                   target="_blank"
                   className="view-profile-link"
                 >

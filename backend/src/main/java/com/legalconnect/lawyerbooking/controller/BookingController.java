@@ -155,6 +155,30 @@ public class BookingController {
         }
     }
 
+    @PutMapping("/{appointmentId}")
+    public ResponseEntity<BookingResponse> updateAppointment(
+            @PathVariable Long appointmentId,
+            @RequestHeader(value = "X-User-Id", required = false) Long userId,
+            @Valid @RequestBody BookingRequest request) {
+        try {
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new BookingResponse(false, "User ID is required"));
+            }
+
+            AppointmentDTO appointment = bookingService.updateAppointment(appointmentId, userId, request);
+            return ResponseEntity.ok(new BookingResponse(true, "Appointment updated successfully", appointment));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new BookingResponse(false, e.getMessage()));
+        } catch (Exception e) {
+            System.err.println("Error updating appointment: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new BookingResponse(false, "Internal server error: " + e.getMessage()));
+        }
+    }
+
     @PutMapping("/{appointmentId}/confirm")
     public ResponseEntity<BookingResponse> confirmAppointment(
             @PathVariable Long appointmentId,

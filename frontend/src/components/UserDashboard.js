@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { removeToken } from '../utils/auth';
 import Booking from './Booking';
@@ -42,13 +42,7 @@ function UserDashboard() {
     }
   }, [navigate]);
 
-  useEffect(() => {
-    if (userId && activeTab === 'cases') {
-      fetchCases();
-    }
-  }, [userId, activeTab]);
-
-  const fetchCases = async () => {
+  const fetchCases = useCallback(async () => {
     if (!userId) return;
     setCasesLoading(true);
     try {
@@ -61,7 +55,15 @@ function UserDashboard() {
     } finally {
       setCasesLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    if (userId && activeTab === 'cases') {
+      fetchCases();
+    }
+  }, [userId, activeTab, fetchCases]);
+
+
 
   useEffect(() => {
     return () => {
@@ -131,7 +133,7 @@ function UserDashboard() {
     setResult(null);
 
     const formData = new FormData();
-    const fileName = 'recording.webm';
+    const fileName = audioBlob.name || 'recording.webm';
     formData.append('file', audioBlob, fileName);
     formData.append('userId', userId.toString());
 

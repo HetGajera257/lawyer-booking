@@ -2,6 +2,23 @@ package com.legalconnect.lawyerbooking.dto;
 
 import java.time.LocalDateTime;
 
+/**
+ * SECURE MESSAGE DTO
+ * 
+ * PURPOSE: Data Transfer Object for messages with complete sender/receiver information
+ * 
+ * SECURITY FEATURES:
+ * - Contains sender information for UI differentiation
+ * - Includes case ID for scoping
+ * - Read status for message tracking
+ * - Timestamps for ordering
+ * 
+ * UI ENHANCEMENTS:
+ * - Sender type for role-based styling
+ * - Read status for message indicators
+ * - Creation time for display
+ * - Complete participant information
+ */
 public class MessageDTO {
     private Long id;
     private Long caseId;
@@ -101,6 +118,57 @@ public class MessageDTO {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    /**
+     * Check if sender is a user
+     */
+    public boolean isFromUser() {
+        return "user".equalsIgnoreCase(senderType);
+    }
+
+    /**
+     * Check if sender is a lawyer
+     */
+    public boolean isFromLawyer() {
+        return "lawyer".equalsIgnoreCase(senderType);
+    }
+
+    /**
+     * Get normalized sender type
+     */
+    public String getNormalizedSenderType() {
+        return senderType != null ? senderType.toLowerCase() : null;
+    }
+
+    /**
+     * Get normalized receiver type
+     */
+    public String getNormalizedReceiverType() {
+        return receiverType != null ? receiverType.toLowerCase() : null;
+    }
+
+    /**
+     * Get formatted creation time for display
+     */
+    public String getFormattedTime() {
+        if (createdAt == null) return "";
+        return createdAt.toString(); // Frontend will format this
+    }
+
+    @Override
+    public String toString() {
+        return "MessageDTO{" +
+                "id=" + id +
+                ", caseId=" + caseId +
+                ", senderId=" + senderId +
+                ", senderType='" + senderType + '\'' +
+                ", receiverId=" + receiverId +
+                ", receiverType='" + receiverType + '\'' +
+                ", messageText='" + messageText + '\'' +
+                ", isRead=" + isRead +
+                ", createdAt=" + createdAt +
+                '}';
     }
 }
 

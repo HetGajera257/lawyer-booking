@@ -34,12 +34,22 @@ public class AuthorizationService {
     @Autowired
     private MessageRepository messageRepository;
 
+    private com.legalconnect.lawyerbooking.security.UserPrincipal getCurrentUser() {
+        org.springframework.security.core.Authentication auth = 
+            org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof com.legalconnect.lawyerbooking.security.UserPrincipal) {
+            return (com.legalconnect.lawyerbooking.security.UserPrincipal) auth.getPrincipal();
+        }
+        throw new com.legalconnect.lawyerbooking.exception.UnauthorizedException("User not authenticated");
+    }
+
     /**
-     * Verifies that a user/lawyer has access to a specific case
+     * Verifies that the current user/lawyer has access to a specific case
      */
-    public void verifyCaseAccess(Long caseId, String token) {
-        Long userId = jwtUtil.extractUserId(token);
-        String userType = jwtUtil.extractUserType(token);
+    public void verifyCaseAccess(Long caseId) {
+        com.legalconnect.lawyerbooking.security.UserPrincipal currentUser = getCurrentUser();
+        Long userId = currentUser.getUserId();
+        String userType = currentUser.getUserType();
 
         Case caseEntity = caseRepository.findById(caseId)
             .orElseThrow(() -> new ResourceNotFoundException("Case not found with id: " + caseId));
@@ -63,9 +73,13 @@ public class AuthorizationService {
     }
 
     /**
-     * Verifies that a user/lawyer can send a message for a specific case
+     * Verifies that the current user/lawyer can send a message for a specific case
      */
-    public void verifyMessageAccess(Long caseId, Long senderId, String senderType) {
+    public void verifyMessageAccess(Long caseId) {
+        com.legalconnect.lawyerbooking.security.UserPrincipal currentUser = getCurrentUser();
+        Long senderId = currentUser.getUserId();
+        String senderType = currentUser.getUserType();
+
         Case caseEntity = caseRepository.findById(caseId)
             .orElseThrow(() -> new ResourceNotFoundException("Case not found with id: " + caseId));
 
@@ -85,7 +99,11 @@ public class AuthorizationService {
     /**
      * Verifies that a user can access an appointment
      */
-    public void verifyAppointmentAccess(Long appointmentId, Long userId, String userType) {
+    public void verifyAppointmentAccess(Long appointmentId) {
+        com.legalconnect.lawyerbooking.security.UserPrincipal currentUser = getCurrentUser();
+        Long userId = currentUser.getUserId();
+        String userType = currentUser.getUserType();
+
         Appointment appointment = appointmentRepository.findById(appointmentId)
             .orElseThrow(() -> new ResourceNotFoundException("Appointment not found"));
 
@@ -103,7 +121,11 @@ public class AuthorizationService {
     /**
      * Verifies that a user can update a case (only assigned lawyer can update)
      */
-    public void verifyCaseUpdateAccess(Long caseId, Long userId, String userType) {
+    public void verifyCaseUpdateAccess(Long caseId) {
+        com.legalconnect.lawyerbooking.security.UserPrincipal currentUser = getCurrentUser();
+        Long userId = currentUser.getUserId();
+        String userType = currentUser.getUserType();
+
         Case caseEntity = caseRepository.findById(caseId)
             .orElseThrow(() -> new ResourceNotFoundException("Case not found"));
 

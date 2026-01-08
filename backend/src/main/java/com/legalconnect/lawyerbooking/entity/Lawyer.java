@@ -29,11 +29,38 @@ public class Lawyer {
     @Column(length = 255)
     private String specialization;
 
+    @Column(name = "specializations", length = 500)
+    private String specializations; 
+
+    @Column(name = "years_of_experience")
+    private Integer yearsOfExperience;
+
+    @Column(name = "languages_known", length = 255)
+    private String languagesKnown;
+
+    @Column(name = "rating")
+    private Double rating;
+
+    @Column(name = "completed_cases_count")
+    private Integer completedCasesCount;
+
+    @Column(name = "profile_photo_url", length = 500)
+    private String profilePhotoUrl;
+
+    @Column(name = "account_status", length = 20)
+    private String accountStatus = "ACTIVE"; // ACTIVE, INACTIVE
+
+    @Column(name = "total_cases_count")
+    private Integer totalCasesCount = 0;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "availability_info", length = 500)
+    private String availabilityInfo;
 
     @PrePersist
     protected void onCreate() {
@@ -47,76 +74,58 @@ public class Lawyer {
     }
 
     // Getters and Setters
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
 
-    public String getUsername() {
-        return username;
-    }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public String getPassword() {
-        return password;
-    }
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
+    public String getBarNumber() { return barNumber; }
+    public void setBarNumber(String barNumber) { this.barNumber = barNumber; }
 
-    public String getEmail() {
-        return email;
-    }
+    public String getSpecialization() { return specialization; }
+    public void setSpecialization(String specialization) { this.specialization = specialization; }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+    public String getSpecializations() { return specializations; }
+    public void setSpecializations(String specializations) { this.specializations = specializations; }
 
-    public String getFullName() {
-        return fullName;
-    }
+    public Integer getYearsOfExperience() { return yearsOfExperience; }
+    public void setYearsOfExperience(Integer yearsOfExperience) { this.yearsOfExperience = yearsOfExperience; }
 
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
+    public String getLanguagesKnown() { return languagesKnown; }
+    public void setLanguagesKnown(String languagesKnown) { this.languagesKnown = languagesKnown; }
 
-    public String getBarNumber() {
-        return barNumber;
-    }
+    public Double getRating() { return rating; }
+    public void setRating(Double rating) { this.rating = rating; }
 
-    public void setBarNumber(String barNumber) {
-        this.barNumber = barNumber;
-    }
+    public Integer getCompletedCasesCount() { return completedCasesCount; }
+    public void setCompletedCasesCount(Integer completedCasesCount) { this.completedCasesCount = completedCasesCount; }
 
-    public String getSpecialization() {
-        return specialization;
-    }
+    public String getProfilePhotoUrl() { return profilePhotoUrl; }
+    public void setProfilePhotoUrl(String profilePhotoUrl) { this.profilePhotoUrl = profilePhotoUrl; }
 
-    public void setSpecialization(String specialization) {
-        this.specialization = specialization;
-    }
+    public String getAvailabilityInfo() { return availabilityInfo; }
+    public void setAvailabilityInfo(String availabilityInfo) { this.availabilityInfo = availabilityInfo; }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
+    public String getAccountStatus() { return accountStatus; }
+    public void setAccountStatus(String accountStatus) { this.accountStatus = accountStatus; }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+    public Integer getTotalCasesCount() { return totalCasesCount; }
+    public void setTotalCasesCount(Integer totalCasesCount) { this.totalCasesCount = totalCasesCount; }
 
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }
 

@@ -8,6 +8,8 @@ import com.legalconnect.lawyerbooking.entity.User;
 import com.legalconnect.lawyerbooking.repository.AppointmentRepository;
 import com.legalconnect.lawyerbooking.repository.LawyerRepository;
 import com.legalconnect.lawyerbooking.repository.UserRepository;
+import com.legalconnect.lawyerbooking.repository.CaseRepository;
+import com.legalconnect.lawyerbooking.entity.Case;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,9 @@ public class BookingService {
 
     @Autowired
     private LawyerRepository lawyerRepository;
+
+    @Autowired
+    private CaseRepository caseRepository;
 
     @Transactional
     public AppointmentDTO createAppointment(Long userId, BookingRequest request) {
@@ -64,9 +69,28 @@ public class BookingService {
         appointment.setStatus("pending");
         appointment.setMeetingType(request.getMeetingType());
         appointment.setDescription(request.getDescription());
+        appointment.setDescription(request.getDescription());
         appointment.setNotes(request.getNotes());
+        appointment.setCaseId(request.getCaseId());
 
         Appointment saved = appointmentRepository.save(appointment);
+
+        // Update case status if linked to a case
+        if (request.getCaseId() != null) {
+            Optional<Case> caseOpt = caseRepository.findById(request.getCaseId());
+            if (caseOpt.isPresent()) {
+                Case caseEntity = caseOpt.get();
+                if ("open".equals(caseEntity.getCaseStatus())) {
+                    caseEntity.setCaseStatus("in-progress");
+                    // Ensure lawyer is assigned if not already
+                    if (caseEntity.getLawyerId() == null) {
+                        caseEntity.setLawyerId(request.getLawyerId());
+                    }
+                    caseRepository.save(caseEntity);
+                }
+            }
+        }
+
         return convertToDTO(saved);
     }
 
@@ -148,6 +172,57 @@ public class BookingService {
     }
 
     @Transactional
+    public AppointmentDTO updateAppointment(Long appointmentId, Long userId, BookingRequest request) {
+        Optional<Appointment> appointmentOpt = appointmentRepository.findById(appointmentId);
+        if (appointmentOpt.isEmpty()) {
+            throw new IllegalArgumentException("Appointment not found");
+        }
+
+        Appointment appointment = appointmentOpt.get();
+
+        // Verify user owns the appointment
+        if (!appointment.getUserId().equals(userId)) {
+            throw new IllegalArgumentException("You can only edit your own appointments");
+        }
+
+        // Can only edit pending appointments
+        if (!appointment.getStatus().equals("pending")) {
+            throw new IllegalArgumentException("Cannot edit appointment with status: " + appointment.getStatus());
+        }
+
+        // Check for overlapping appointments if date/time changed
+        if (!appointment.getAppointmentDate().equals(request.getAppointmentDate()) || 
+            !appointment.getDurationMinutes().equals(request.getDurationMinutes())) {
+            
+            LocalDateTime startTime = request.getAppointmentDate();
+            LocalDateTime endTime = startTime.plusMinutes(request.getDurationMinutes());
+            
+            List<Appointment> overlapping = appointmentRepository.findOverlappingAppointments(
+                request.getLawyerId(), startTime, endTime
+            );
+            
+            // Exclude current appointment from overlap check
+            overlapping = overlapping.stream()
+                .filter(a -> !a.getId().equals(appointmentId))
+                .collect(Collectors.toList());
+
+            if (!overlapping.isEmpty()) {
+                throw new IllegalArgumentException("Lawyer is not available at this time. Please choose another time slot.");
+            }
+        }
+
+        appointment.setAppointmentDate(request.getAppointmentDate());
+        appointment.setDurationMinutes(request.getDurationMinutes());
+        appointment.setMeetingType(request.getMeetingType());
+        appointment.setDescription(request.getDescription());
+        appointment.setNotes(request.getNotes());
+        appointment.setCaseId(request.getCaseId());
+
+        Appointment updated = appointmentRepository.save(appointment);
+        return convertToDTO(updated);
+    }
+
+    @Transactional
     public AppointmentDTO confirmAppointment(Long appointmentId, Long lawyerId) {
         Optional<Appointment> appointmentOpt = appointmentRepository.findById(appointmentId);
         if (appointmentOpt.isEmpty()) {
@@ -167,6 +242,19 @@ public class BookingService {
 
         appointment.setStatus("confirmed");
         Appointment updated = appointmentRepository.save(appointment);
+
+        // Ensure case is in-progress if it was still open
+        if (updated.getCaseId() != null) {
+            Optional<Case> caseOpt = caseRepository.findById(updated.getCaseId());
+            if (caseOpt.isPresent()) {
+                Case caseEntity = caseOpt.get();
+                if ("open".equals(caseEntity.getCaseStatus())) {
+                    caseEntity.setCaseStatus("in-progress");
+                    caseRepository.save(caseEntity);
+                }
+            }
+        }
+
         return convertToDTO(updated);
     }
 
@@ -181,6 +269,7 @@ public class BookingService {
         dto.setMeetingType(appointment.getMeetingType());
         dto.setDescription(appointment.getDescription());
         dto.setNotes(appointment.getNotes());
+        dto.setCaseId(appointment.getCaseId());
         dto.setCreatedAt(appointment.getCreatedAt());
         dto.setUpdatedAt(appointment.getUpdatedAt());
 

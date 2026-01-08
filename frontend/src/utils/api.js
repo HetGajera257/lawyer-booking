@@ -48,6 +48,11 @@ export const casesApi = {
     updateStatus: (caseId, status) => api.put(`/cases/${caseId}/status`, { status }),
 };
 
+export const lawyersApi = {
+    search: (params) => api.get('/cases/lawyers/search', { params }),
+    getProfile: (lawyerId) => api.get(`/lawyers/${lawyerId}/profile`),
+};
+
 export const messagesApi = {
     send: (messageData) => api.post('/messages/send', messageData),
     getByCase: (caseId) => api.get(`/messages/case/${caseId}`),

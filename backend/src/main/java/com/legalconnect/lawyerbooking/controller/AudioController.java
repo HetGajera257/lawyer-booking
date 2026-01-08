@@ -11,6 +11,8 @@ import com.legalconnect.lawyerbooking.entity.ClientAudio;
 import com.legalconnect.lawyerbooking.dto.ClientAudioDTO;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 @RestController
@@ -27,6 +29,9 @@ public class AudioController {
     @Autowired
     private com.legalconnect.lawyerbooking.service.CaseService caseService;
 
+    @Autowired
+    private com.legalconnect.lawyerbooking.service.RateLimitService rateLimitService;
+
     @PostMapping("/upload")
     public ResponseEntity<?> uploadAudio(
             @RequestParam("file") MultipartFile file,
@@ -34,66 +39,24 @@ public class AudioController {
             @RequestParam(value = "caseTitle", required = false) String caseTitle) {
 
         try {
+            if (!rateLimitService.tryConsumeAi()) {
+                return ResponseEntity.status(429).body("{\"error\": \"Rate limit exceeded for AI video/audio processing. Please try again later.\"}");
+            }
+
             if (file == null || file.isEmpty()) {
                 return ResponseEntity.badRequest()
                     .body("{\"error\": \"Audio file is missing or empty\"}");
             }
 
-            // Validate file size (20MB limit)
+            // ... (rest of validation) ...
             long maxSize = 20 * 1024 * 1024; // 20MB
             if (file.getSize() > maxSize) {
                 return ResponseEntity.badRequest()
-                    .body("{\"error\": \"File size exceeds 20MB limit. Please upload a smaller file.\"}");
+                    .body("{\"error\": \"File size exceeds 20MB limit.\"}");
             }
 
-            // Validate file type
-            String contentType = file.getContentType();
-            if (contentType != null && !contentType.startsWith("audio/")) {
-                System.out.println("Warning: File content type is: " + contentType + 
-                    ", but proceeding with upload");
-            }
-
-            System.out.println("Uploading file: " + file.getOriginalFilename() + 
-                ", size: " + file.getSize() + " bytes, type: " + contentType);
-
-            ClientAudio saved = audioService.process(file, userId);
-            
-            // Create case if userId is provided
-            Long caseId = null;
-            if (userId != null) {
-                try {
-                    String title = caseTitle != null && !caseTitle.trim().isEmpty() 
-                        ? caseTitle 
-                        : "Case from Audio - " + (file.getOriginalFilename() != null ? file.getOriginalFilename() : "recording");
-                    
-                    com.legalconnect.lawyerbooking.dto.CaseRequest caseRequest = 
-                        new com.legalconnect.lawyerbooking.dto.CaseRequest();
-                    caseRequest.setUserId(userId);
-                    caseRequest.setCaseTitle(title);
-                    caseRequest.setCaseType("General");
-                    caseRequest.setDescription(saved.getMaskedEnglishText() != null 
-                        ? saved.getMaskedEnglishText().substring(0, Math.min(500, saved.getMaskedEnglishText().length()))
-                        : "Case created from audio upload");
-                    
-                    com.legalconnect.lawyerbooking.dto.CaseDTO caseDTO = caseService.createCase(caseRequest);
-                    caseId = caseDTO.getId();
-                    
-                    System.out.println("Case created successfully with ID: " + caseId + " for user ID: " + userId);
-                    
-                    // Link audio to case
-                    saved.setCaseId(caseId);
-                    saved = repository.save(saved);
-                    
-                    System.out.println("Audio record linked to case ID: " + caseId);
-                } catch (Exception e) {
-                    System.err.println("Error creating case for user " + userId + ": " + e.getMessage());
-                    e.printStackTrace();
-                    // Continue without case creation - audio is still saved
-                    System.err.println("Warning: Audio uploaded but case creation failed. Audio ID: " + saved.getId());
-                }
-            } else {
-                System.out.println("Warning: userId is null, case will not be created for audio ID: " + saved.getId());
-            }
+            // Using the refactored, robust method from AudioProcessingService
+            ClientAudio saved = audioService.processAndCreateCase(file, userId, caseTitle);
             
             // Convert to DTO to include masked audio as Base64
             ClientAudioDTO dto = new ClientAudioDTO(
@@ -130,13 +93,15 @@ public class AudioController {
                     "Please try with a shorter audio file (under 5 minutes).";
             }
             
-            return ResponseEntity.status(500)
-                .body("{\"error\": \"" + errorMessage.replace("\"", "\\\"") + "\"}");
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", errorMessage);
+            return ResponseEntity.status(500).body(errorResponse);
         } catch (Exception e) {
             System.err.println("Unexpected error processing audio: " + e.getMessage());
             e.printStackTrace();
-            return ResponseEntity.status(500)
-                .body("{\"error\": \"Unexpected error: " + e.getMessage().replace("\"", "\\\"") + "\"}");
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Unexpected error: " + (e.getMessage() != null ? e.getMessage() : "Unknown error"));
+            return ResponseEntity.status(500).body(errorResponse);
         }
     }
 

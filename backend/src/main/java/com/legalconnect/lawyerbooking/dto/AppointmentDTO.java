@@ -15,6 +15,7 @@ public class AppointmentDTO {
     private String meetingType;
     private String description;
     private String notes;
+    private Long caseId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -128,6 +129,14 @@ public class AppointmentDTO {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Long getCaseId() {
+        return caseId;
+    }
+
+    public void setCaseId(Long caseId) {
+        this.caseId = caseId;
     }
 
     public LocalDateTime getUpdatedAt() {
