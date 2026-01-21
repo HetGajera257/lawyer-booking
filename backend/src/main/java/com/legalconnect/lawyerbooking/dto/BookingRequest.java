@@ -25,7 +25,16 @@ public class BookingRequest {
     
     private String notes;
 
+    private Long caseId;
+
     // Getters and Setters
+    public Long getCaseId() {
+        return caseId;
+    }
+
+    public void setCaseId(Long caseId) {
+        this.caseId = caseId;
+    }
     public Long getLawyerId() {
         return lawyerId;
     }

@@ -29,6 +29,9 @@ public class Appointment {
     @Column(name = "meeting_type", length = 20)
     private String meetingType = "video"; // in-person, video, phone, audio
 
+    @Column(name = "case_id")
+    private Long caseId;
+
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
@@ -131,6 +134,14 @@ public class Appointment {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Long getCaseId() {
+        return caseId;
+    }
+
+    public void setCaseId(Long caseId) {
+        this.caseId = caseId;
     }
 
     public LocalDateTime getUpdatedAt() {

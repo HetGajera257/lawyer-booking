@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { setToken, removeToken } from '../utils/auth';
+import { setToken } from '../utils/auth';
 import './Login.css';
 
 const API_BASE_URL = 'http://localhost:8080/api/auth';
