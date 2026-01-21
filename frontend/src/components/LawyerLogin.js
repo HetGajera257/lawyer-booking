@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { setToken } from '../utils/auth';
+import { setToken, removeToken } from '../utils/auth';
 import './Login.css';
 
 const API_BASE_URL = 'http://localhost:8080/api/auth';
@@ -17,6 +17,9 @@ function LawyerLogin() {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    // Ensure we start with a clean slate to prevent session leakage
+    removeToken();
 
     if (!username || !password) {
       setError('Please enter both username and password');

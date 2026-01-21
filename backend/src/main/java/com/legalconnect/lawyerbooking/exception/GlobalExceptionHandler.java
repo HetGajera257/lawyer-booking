@@ -131,12 +131,12 @@ public class GlobalExceptionHandler {
      * Handles all other exceptions
      */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
-        logger.error("Unexpected exception occurred", ex);
+    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, jakarta.servlet.http.HttpServletRequest request) {
+        logger.error("Unexpected exception occurred in {} {}: {}", request.getMethod(), request.getRequestURI(), ex.getMessage());
         
         ErrorResponse errorResponse = new ErrorResponse(
             "Internal server error",
-            "An unexpected error occurred. Please try again later.",
+            "An unexpected error occurred. Request: " + request.getMethod() + " " + request.getRequestURI(),
             HttpStatus.INTERNAL_SERVER_ERROR.value(),
             LocalDateTime.now()
         );

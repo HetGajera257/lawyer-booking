@@ -18,6 +18,9 @@ function UserLogin() {
     setError('');
     setLoading(true);
 
+    // Ensure we start with a clean slate
+    removeToken();
+
     if (!username || !password) {
       setError('Please enter both username and password');
       setLoading(false);

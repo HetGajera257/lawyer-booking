@@ -116,7 +116,7 @@ public class BookingController {
 
     @PutMapping("/{appointmentId}/status")
     public ResponseEntity<BookingResponse> updateAppointmentStatus(
-            @PathVariable Long appointmentId,
+            @PathVariable("appointmentId") Long appointmentId,
             @RequestParam String status) {
         try {
             AppointmentDTO appointment = bookingService.updateAppointmentStatus(appointmentId, status);
@@ -134,7 +134,7 @@ public class BookingController {
 
     @PutMapping("/{appointmentId}/cancel")
     public ResponseEntity<BookingResponse> cancelAppointment(
-            @PathVariable Long appointmentId,
+            @PathVariable("appointmentId") Long appointmentId,
             @RequestHeader(value = "X-User-Id", required = false) Long userId) {
         try {
             if (userId == null) {
@@ -157,7 +157,7 @@ public class BookingController {
 
     @PutMapping("/{appointmentId}/confirm")
     public ResponseEntity<BookingResponse> confirmAppointment(
-            @PathVariable Long appointmentId,
+            @PathVariable("appointmentId") Long appointmentId,
             @RequestHeader(value = "X-Lawyer-Id", required = false) Long lawyerId) {
         try {
             if (lawyerId == null) {

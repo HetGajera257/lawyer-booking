@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import UserCaseMessages from './UserCaseMessages';
+import LawyerProfile from './LawyerProfile';
 import { casesApi } from '../utils/api';
 import { toast } from 'react-toastify';
 
@@ -10,11 +11,7 @@ const CaseDetail = ({ caseId, userType, userId, lawyerId, onBack }) => {
     const [savingSolution, setSavingSolution] = useState(false);
     const [error, setError] = useState('');
 
-    useEffect(() => {
-        fetchCaseDetails();
-    }, [caseId]);
-
-    const fetchCaseDetails = async () => {
+    const fetchCaseDetails = useCallback(async () => {
         setLoading(true);
         try {
             // If we don't have the full object, fetch it
@@ -29,7 +26,11 @@ const CaseDetail = ({ caseId, userType, userId, lawyerId, onBack }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [caseId]);
+
+    useEffect(() => {
+        fetchCaseDetails();
+    }, [fetchCaseDetails]);
 
     const handleSaveSolution = async () => {
         if (!solution.trim()) {
@@ -160,14 +161,29 @@ const CaseDetail = ({ caseId, userType, userId, lawyerId, onBack }) => {
                 )}
             </div>
 
-            <div className="case-messages">
-                {/* Reusing existing message component but ensuring correct props are passed */}
-                {/* Note: UserCaseMessages might need minor tweaks if it strictly assumes 'user' context, but we can pass props to adapt it or just reuse it as it seems flexible enough based on reading its code */}
-                <UserCaseMessages
-                    caseId={caseId}
-                    userId={userId} // For UserDashboard: logged in user. For LawyerDashboard: case.userId 
-                    lawyerId={userType === 'lawyer' ? userId : caseData.lawyerId} // logic to ensure correct ID mapping
-                />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+                <div className="case-messages">
+                    <UserCaseMessages
+                        caseId={caseId}
+                        userId={userId}
+                        userType={userType}
+                        lawyerId={caseData.lawyerId}
+                        clientUserId={caseData.userId}
+                        onCaseUpdate={(updatedCase) => {
+                            setCaseData(updatedCase);
+                            if (updatedCase.solution !== undefined) {
+                                setSolution(updatedCase.solution);
+                            }
+                        }}
+                    />
+                </div>
+
+                {!isLawyer && caseData.lawyerId && (
+                    <div className="lawyer-expert-profile">
+                        <h3 style={{ fontSize: '1.1rem', marginBottom: '15px' }}>Your Assigned Lawyer</h3>
+                        <LawyerProfile lawyerId={caseData.lawyerId} />
+                    </div>
+                )}
             </div>
         </div>
     );

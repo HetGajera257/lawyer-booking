@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
-import { getAuthHeaders, getUserId } from '../utils/auth';
+import { getAuthHeaders } from '../utils/auth';
 import './Booking.css';
 
 const API_BASE_URL = 'http://localhost:8080/api';
@@ -12,7 +12,6 @@ function Booking({ userId, onBookingSuccess }) {
   const [lawyers, setLawyers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [formData, setFormData] = useState({
     lawyerId: '',
     appointmentDate: '',
@@ -43,7 +42,7 @@ function Booking({ userId, onBookingSuccess }) {
       }
     } catch (err) {
       console.error('Error fetching lawyers:', err);
-      const errorMsg = err.message.includes('fetch') 
+      const errorMsg = err.message.includes('fetch')
         ? 'Error loading lawyers: Cannot connect to server. Please ensure the backend is running on http://localhost:8080'
         : 'Error loading lawyers: ' + err.message;
       setError(errorMsg);
@@ -61,13 +60,11 @@ function Booking({ userId, onBookingSuccess }) {
       [name]: value
     }));
     setError('');
-    setSuccess('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setSuccess('');
     setLoading(true);
 
     try {
@@ -133,12 +130,12 @@ function Booking({ userId, onBookingSuccess }) {
   return (
     <div className="booking-container">
       <h2>Book an Appointment</h2>
-      
+
       {error && !loading && (
         <div className="error-message">
           <span className="error-text">{error}</span>
-          <button 
-            className="error-close" 
+          <button
+            className="error-close"
             onClick={() => setError('')}
             aria-label="Close error"
           >
@@ -146,7 +143,7 @@ function Booking({ userId, onBookingSuccess }) {
           </button>
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit} className="booking-form">
         <div className="form-group">
           <label htmlFor="lawyerId">Select Lawyer *</label>
@@ -170,8 +167,8 @@ function Booking({ userId, onBookingSuccess }) {
                 ))}
               </select>
               {formData.lawyerId && (
-                <Link 
-                  to={`/lawyer/${formData.lawyerId}`} 
+                <Link
+                  to={`/lawyer/${formData.lawyerId}`}
                   target="_blank"
                   className="view-profile-link"
                 >

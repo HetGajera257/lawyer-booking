@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Skeleton from 'react-loading-skeleton';
@@ -14,18 +14,14 @@ function AppointmentsList({ userId, userType = 'user' }) {
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('all'); // all, upcoming, past
 
-  useEffect(() => {
-    fetchAppointments();
-  }, [userId, userType, filter]);
-
-  const fetchAppointments = async () => {
+  const fetchAppointments = useCallback(async () => {
     setLoading(true);
     setError('');
 
     try {
       let url;
       if (filter === 'upcoming') {
-        url = userType === 'user' 
+        url = userType === 'user'
           ? `${API_BASE_URL}/bookings/user/${userId}/upcoming`
           : `${API_BASE_URL}/bookings/lawyer/${userId}/upcoming`;
       } else {
@@ -37,7 +33,7 @@ function AppointmentsList({ userId, userType = 'user' }) {
       const response = await fetch(url, {
         headers: getAuthHeaders()
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch appointments');
       }
@@ -46,7 +42,7 @@ function AppointmentsList({ userId, userType = 'user' }) {
       setAppointments(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching appointments:', err);
-      const errorMsg = err.message.includes('fetch') 
+      const errorMsg = err.message.includes('fetch')
         ? 'Error loading appointments: Cannot connect to server. Please ensure the backend is running on http://localhost:8080'
         : 'Error loading appointments: ' + err.message;
       setError(errorMsg);
@@ -55,7 +51,11 @@ function AppointmentsList({ userId, userType = 'user' }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId, userType, filter]);
+
+  useEffect(() => {
+    fetchAppointments();
+  }, [fetchAppointments]);
 
   const handleCancel = async (appointmentId) => {
     if (!window.confirm('Are you sure you want to cancel this appointment?')) {
@@ -129,9 +129,9 @@ function AppointmentsList({ userId, userType = 'user' }) {
       completed: '#3498db',
       cancelled: '#e74c3c'
     };
-    
+
     return (
-      <span 
+      <span
         className="status-badge"
         style={{ backgroundColor: statusColors[status] || '#95a5a6' }}
       >
@@ -173,8 +173,8 @@ function AppointmentsList({ userId, userType = 'user' }) {
       {error && (
         <div className="error-message">
           <span className="error-text">{error}</span>
-          <button 
-            className="error-close" 
+          <button
+            className="error-close"
             onClick={() => setError('')}
             aria-label="Close error"
           >
@@ -229,15 +229,15 @@ function AppointmentsList({ userId, userType = 'user' }) {
               </div>
 
               <div className="appointment-actions">
-                {userType === 'user' && 
-                 (appointment.status === 'pending' || appointment.status === 'confirmed') && (
-                  <button
-                    onClick={() => handleCancel(appointment.id)}
-                    className="cancel-button"
-                  >
-                    Cancel
-                  </button>
-                )}
+                {userType === 'user' &&
+                  (appointment.status === 'pending' || appointment.status === 'confirmed') && (
+                    <button
+                      onClick={() => handleCancel(appointment.id)}
+                      className="cancel-button"
+                    >
+                      Cancel
+                    </button>
+                  )}
                 {userType === 'lawyer' && appointment.status === 'pending' && (
                   <button
                     onClick={() => handleConfirm(appointment.id)}

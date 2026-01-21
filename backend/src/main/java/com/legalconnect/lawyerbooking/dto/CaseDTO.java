@@ -10,6 +10,7 @@ public class CaseDTO {
     private String caseType;
     private String caseStatus;
     private String description;
+    private String caseCategory;
     private String solution;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -17,9 +18,9 @@ public class CaseDTO {
     // Constructors
     public CaseDTO() {}
 
-    public CaseDTO(Long id, Long userId, Long lawyerId, String caseTitle, 
+    public CaseDTO(Long id, Long userId, Long lawyerId, String caseTitle,
                    String caseType, String caseStatus, String description, 
-                   String solution, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                   String caseCategory, String solution, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.userId = userId;
         this.lawyerId = lawyerId;
@@ -27,6 +28,7 @@ public class CaseDTO {
         this.caseType = caseType;
         this.caseStatus = caseStatus;
         this.description = description;
+        this.caseCategory = caseCategory;
         this.solution = solution;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -95,6 +97,14 @@ public class CaseDTO {
 
     public void setSolution(String solution) {
         this.solution = solution;
+    }
+
+    public String getCaseCategory() {
+        return caseCategory;
+    }
+
+    public void setCaseCategory(String caseCategory) {
+        this.caseCategory = caseCategory;
     }
 
     public LocalDateTime getCreatedAt() {

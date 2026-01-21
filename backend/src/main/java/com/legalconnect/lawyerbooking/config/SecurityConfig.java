@@ -43,8 +43,11 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable()) // Disable CSRF for API endpoints and REST APIs don't use cookies
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll() // Allow all auth endpoints
+                .requestMatchers("/api/admin/login").permitAll() // Allow admin login
                 .requestMatchers("/api/audio/**").permitAll() // Allow audio endpoints
                 .requestMatchers("/api/bookings/lawyers").permitAll() // Allow public lawyer list
+                .requestMatchers("/api/lawyers/*/profile").permitAll() // Allow public lawyer profiles for dashboard
+                .requestMatchers("/ws/**").permitAll() // Allow WebSocket handshake
                 .anyRequest().authenticated() // Require authentication for other endpoints
             )
             .sessionManagement(session -> session

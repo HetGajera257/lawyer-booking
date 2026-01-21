@@ -9,12 +9,7 @@ export const setToken = (token) => {
 };
 
 export const removeToken = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('userType');
-  localStorage.removeItem('username');
-  localStorage.removeItem('userId');
-  localStorage.removeItem('lawyerId');
-  localStorage.removeItem('fullName');
+  localStorage.clear();
 };
 
 export const getAuthHeaders = () => {

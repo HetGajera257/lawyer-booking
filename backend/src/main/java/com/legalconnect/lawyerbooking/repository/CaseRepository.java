@@ -11,5 +11,6 @@ public interface CaseRepository extends JpaRepository<Case, Long> {
     List<Case> findByLawyerId(Long lawyerId);
     List<Case> findByCaseStatus(String status);
     List<Case> findByLawyerIdIsNull(); // Cases not yet assigned to a lawyer
+    List<Case> findByLawyerIdIsNullAndCaseCategoryIn(java.util.Collection<String> categories);
 }
 

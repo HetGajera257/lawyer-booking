@@ -42,17 +42,10 @@ public class CaseController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CaseDTO> getCaseById(
-            @PathVariable Long id,
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+    public ResponseEntity<CaseDTO> getCaseById(@PathVariable("id") Long id) {
+        logger.info("Fetching details for case ID: {}", id);
         try {
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                throw new UnauthorizedException("Authorization token required");
-            }
-            
-            String token = authHeader.substring(7);
-            authorizationService.verifyCaseAccess(id, token);
-            
+            authorizationService.verifyCaseAccess(id);
             CaseDTO caseDTO = caseService.getCaseById(id);
             return ResponseEntity.ok(caseDTO);
         } catch (UnauthorizedException e) {
@@ -65,15 +58,37 @@ public class CaseController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<CaseDTO>> getCasesByUserId(@PathVariable Long userId) {
-        List<CaseDTO> cases = caseService.getCasesByUserId(userId);
-        return ResponseEntity.ok(cases);
+    public ResponseEntity<List<CaseDTO>> getCasesByUserId(@PathVariable("userId") Long userId) {
+        try {
+            // Verify that the requester is the user with this ID
+            com.legalconnect.lawyerbooking.security.UserPrincipal currentUser = authorizationService.getCurrentUser();
+            
+            logger.info("DEBUG_AUTH: userId={}, currentUserId={}, currentUserType={}", 
+                userId, currentUser.getUserId(), currentUser.getUserType());
+
+            if (!currentUser.getUserType().equalsIgnoreCase("user") || !currentUser.getUserId().equals(userId)) {
+                logger.warn("Unauthorized access to cases for user {}. Principal: {}", userId, currentUser.getName());
+                return ResponseEntity.status(401).build();
+            }
+            
+            List<CaseDTO> cases = caseService.getCasesByUserId(userId);
+            return ResponseEntity.ok(cases);
+        } catch (UnauthorizedException e) {
+            logger.warn("Unauthorized in getCasesByUserId: {}", e.getMessage());
+            return ResponseEntity.status(401).build();
+        }
     }
 
     @GetMapping("/lawyer/{lawyerId}")
-    public ResponseEntity<List<CaseDTO>> getCasesByLawyerId(@PathVariable Long lawyerId) {
-        List<CaseDTO> cases = caseService.getCasesByLawyerId(lawyerId);
-        return ResponseEntity.ok(cases);
+    public ResponseEntity<List<CaseDTO>> getCasesByLawyerId(@PathVariable("lawyerId") Long lawyerId) {
+        try {
+            authorizationService.verifyLawyerAccess(lawyerId);
+            List<CaseDTO> cases = caseService.getCasesByLawyerId(lawyerId);
+            return ResponseEntity.ok(cases);
+        } catch (UnauthorizedException e) {
+            logger.warn("Unauthorized in getCasesByLawyerId: {}", e.getMessage());
+            return ResponseEntity.status(401).build();
+        }
     }
 
     @GetMapping("/unassigned")
@@ -82,14 +97,30 @@ public class CaseController {
         return ResponseEntity.ok(cases);
     }
 
+    @GetMapping("/recommended/{lawyerId}")
+    public ResponseEntity<List<CaseDTO>> getRecommendedCases(@PathVariable Long lawyerId) {
+        try {
+            authorizationService.verifyLawyerAccess(lawyerId);
+            List<CaseDTO> cases = caseService.getRecommendedCases(lawyerId);
+            return ResponseEntity.ok(cases);
+        } catch (UnauthorizedException e) {
+            logger.warn("Unauthorized in getRecommendedCases: {}", e.getMessage());
+            return ResponseEntity.status(401).build();
+        }
+    }
+
     @PostMapping("/{caseId}/assign")
     public ResponseEntity<CaseDTO> assignLawyerToCase(
-            @PathVariable Long caseId,
+            @PathVariable("caseId") Long caseId,
             @RequestBody Map<String, Long> request) {
         try {
             Long lawyerId = request.get("lawyerId");
+            authorizationService.verifyLawyerAccess(lawyerId);
             CaseDTO caseDTO = caseService.assignLawyerToCase(caseId, lawyerId);
             return ResponseEntity.ok(caseDTO);
+        } catch (UnauthorizedException e) {
+            logger.warn("Unauthorized in assignLawyerToCase: {}", e.getMessage());
+            return ResponseEntity.status(401).build();
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
@@ -97,19 +128,10 @@ public class CaseController {
 
     @PutMapping("/{caseId}/solution")
     public ResponseEntity<CaseDTO> updateCaseSolution(
-            @PathVariable Long caseId,
-            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @PathVariable("caseId") Long caseId,
             @RequestBody Map<String, String> request) {
         try {
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                throw new UnauthorizedException("Authorization token required");
-            }
-            
-            String token = authHeader.substring(7);
-            Long userId = jwtUtil.extractUserId(token);
-            String userType = jwtUtil.extractUserType(token);
-            
-            authorizationService.verifyCaseUpdateAccess(caseId, userId, userType);
+            authorizationService.verifyCaseUpdateAccess(caseId);
             
             String solution = request.get("solution");
             CaseDTO caseDTO = caseService.updateCaseSolution(caseId, solution);
@@ -125,7 +147,7 @@ public class CaseController {
 
     @PutMapping("/{caseId}/status")
     public ResponseEntity<CaseDTO> updateCaseStatus(
-            @PathVariable Long caseId,
+            @PathVariable("caseId") Long caseId,
             @RequestBody Map<String, String> request) {
         try {
             String status = request.get("status");

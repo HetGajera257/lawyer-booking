@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { removeToken } from '../utils/auth';
 import Booking from './Booking';
@@ -31,8 +31,19 @@ function UserDashboard() {
   useEffect(() => {
     // Check if user is logged in
     const userType = localStorage.getItem('userType');
+    if (!userType) {
+      navigate('/user-login');
+      return;
+    }
+
+    if (userType === 'lawyer') {
+      navigate('/lawyer-dashboard');
+      return;
+    }
+
     if (userType !== 'user') {
       navigate('/user-login');
+      return;
     }
 
     // Get userId from localStorage
@@ -42,13 +53,8 @@ function UserDashboard() {
     }
   }, [navigate]);
 
-  useEffect(() => {
-    if (userId && activeTab === 'cases') {
-      fetchCases();
-    }
-  }, [userId, activeTab]);
 
-  const fetchCases = async () => {
+  const fetchCases = useCallback(async () => {
     if (!userId) return;
     setCasesLoading(true);
     try {
@@ -61,7 +67,15 @@ function UserDashboard() {
     } finally {
       setCasesLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    if (userId && activeTab === 'cases') {
+      fetchCases();
+    }
+  }, [userId, activeTab, fetchCases]);
+
+
 
   useEffect(() => {
     return () => {
@@ -131,7 +145,7 @@ function UserDashboard() {
     setResult(null);
 
     const formData = new FormData();
-    const fileName = 'recording.webm';
+    const fileName = audioBlob.name || 'recording.webm';
     formData.append('file', audioBlob, fileName);
     formData.append('userId', userId.toString());
 
@@ -169,6 +183,26 @@ function UserDashboard() {
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
+
+  // Listen for storage events to handle multi-tab session changes
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'token' || e.key === 'userType') {
+        const newUserType = localStorage.getItem('userType');
+        if (newUserType === 'lawyer') {
+          navigate('/lawyer-dashboard');
+        } else if (!newUserType) {
+          navigate('/user-login');
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [navigate]);
+
+  const currentUserType = localStorage.getItem('userType');
+  if (!currentUserType || currentUserType !== 'user') return null;
 
   return (
     <div className="dashboard-container">

@@ -32,6 +32,7 @@ public class AudioProcessingService {
     private final TextTranslationService translationService;
     private final ClientAudioRepository repository;
     private final CaseService caseService;
+    private final CaseClassificationService classificationService;
 
     @Autowired
     public AudioProcessingService(
@@ -40,13 +41,15 @@ public class AudioProcessingService {
             OpenAITextToSpeechService textToSpeechService,
             TextTranslationService translationService,
             ClientAudioRepository repository,
-            CaseService caseService) {
+            CaseService caseService,
+            CaseClassificationService classificationService) {
         this.whisperService = whisperService;
         this.maskingService = maskingService;
         this.textToSpeechService = textToSpeechService;
         this.translationService = translationService;
         this.repository = repository;
         this.caseService = caseService;
+        this.classificationService = classificationService;
     }
 
     /**
@@ -188,6 +191,11 @@ public class AudioProcessingService {
             caseRequest.setCaseTitle(title);
             caseRequest.setCaseType("General");
             
+            // 6. Classification
+            logger.debug("Step 6: Classifying case category...");
+            String category = classificationService.classifyCase(clientAudio.getMaskedEnglishText());
+            caseRequest.setCaseCategory(category);
+            
             // Generate description safely (max 500 chars)
             String description = clientAudio.getMaskedEnglishText() != null 
                 ? clientAudio.getMaskedEnglishText() 
@@ -198,14 +206,25 @@ public class AudioProcessingService {
             }
             caseRequest.setDescription(description);
 
+            System.out.println(">>> [STEP 7] Triggering CaseService.createCase for user: " + userId);
+            logger.info("Step 7: Creating case via CaseService for user {}...", userId);
             CaseDTO caseDTO = caseService.createCase(caseRequest);
             
-            clientAudio.setCaseId(caseDTO.getId());
-            repository.save(clientAudio);
-            
-            logger.info("Linked audio ID {} to new Case ID {}", clientAudio.getId(), caseDTO.getId());
+            if (caseDTO != null && caseDTO.getId() != null) {
+                System.out.println(">>> [STEP 8] Case created SUCCESSFULLY! ID: " + caseDTO.getId());
+                logger.info("Step 8: Successfully created case ID: {}", caseDTO.getId());
+                clientAudio.setCaseId(caseDTO.getId());
+                repository.save(clientAudio);
+                System.out.println(">>> [STEP 9] Audio linked to Case ID: " + caseDTO.getId());
+                logger.info("Step 9: Linked audio ID {} to new Case ID {}", clientAudio.getId(), caseDTO.getId());
+            } else {
+                System.err.println(">>> [STEP 8 FAIL] CaseDTO is NULL or missing ID!");
+                logger.error("Step 8 FAIL: CaseService returned null or DTO with no ID!");
+            }
         } catch (Exception e) {
-            logger.error("Failed to create/link case for user {}: {}", userId, e.getMessage());
+            System.err.println(">>> [AUDIO PROCESSING ERROR] " + e.getMessage());
+            e.printStackTrace();
+            logger.error("Failed to create/link case for user {}: {}", userId, e.getMessage(), e);
             // We do NOT throw here to preserve the saved audio
         }
     }

@@ -51,7 +51,23 @@ const CaseList = ({ cases, onSelectCase, showAssignButton, userType, onAssign })
                         }}
                     >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <h3 style={{ margin: '0 0 10px 0', color: '#2c3e50' }}>{caseItem.caseTitle}</h3>
+                            <div>
+                                <h3 style={{ margin: '0 0 5px 0', color: '#2c3e50' }}>{caseItem.caseTitle}</h3>
+                                {caseItem.caseCategory && (
+                                    <span style={{
+                                        display: 'inline-block',
+                                        fontSize: '0.75rem',
+                                        color: '#3498db',
+                                        background: '#ebf5fb',
+                                        padding: '2px 8px',
+                                        borderRadius: '4px',
+                                        marginBottom: '10px',
+                                        fontWeight: '600'
+                                    }}>
+                                        🏷️ {caseItem.caseCategory}
+                                    </span>
+                                )}
+                            </div>
                             <span style={{
                                 padding: '4px 12px',
                                 borderRadius: '20px',

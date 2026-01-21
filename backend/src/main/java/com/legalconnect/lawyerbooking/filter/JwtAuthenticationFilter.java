@@ -33,7 +33,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String userType = null;
         Long userId = null;
 
-        // JWT Token is in the form "Bearer token". Remove Bearer word and get only the Token
         if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
             jwtToken = requestTokenHeader.substring(7);
             try {
@@ -41,30 +40,32 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 userType = jwtUtil.extractUserType(jwtToken);
                 userId = jwtUtil.extractUserId(jwtToken);
             } catch (Exception e) {
-                logger.warn("JWT Token parsing failed: " + e.getMessage());
+                logger.error("JWT Token parsing failed: " + e.getMessage());
             }
-        } else {
-            logger.warn("JWT Token does not begin with Bearer String");
         }
 
-        // Once we get the token validate it.
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            if (jwtUtil.validateToken(jwtToken, username)) {
-                // Create authority based on user type
-                SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + userType.toUpperCase());
-                
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        username, null, Collections.singletonList(authority));
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                
-                // After setting the Authentication in the context, we specify
-                // that the current user is authenticated. So it passes the Spring Security Configurations successfully.
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-                
-                // Store userId and userType in request attributes for easy access in controllers
-                request.setAttribute("userId", userId);
-                request.setAttribute("userType", userType);
-            }
+                if (jwtUtil.validateToken(jwtToken, username)) {
+                    com.legalconnect.lawyerbooking.security.UserPrincipal principal = 
+                        new com.legalconnect.lawyerbooking.security.UserPrincipal(userId, username, userType);
+                    
+                    if (logger.isInfoEnabled()) {
+                        logger.info("JWT Filter: Authenticated user " + username + " (ID: " + userId + ") with type " + userType);
+                    }
+
+                    SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + userType.toUpperCase());
+                    
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            principal, null, Collections.singletonList(authority));
+                    
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    
+                    request.setAttribute("userId", userId);
+                    request.setAttribute("userType", userType);
+                } else {
+                    logger.warn("JWT Filter: Token validation failed for user " + username);
+                }
         }
         chain.doFilter(request, response);
     }

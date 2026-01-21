@@ -42,10 +42,16 @@ export const casesApi = {
     getById: (id) => api.get(`/cases/${id}`),
     getByUser: (userId) => api.get(`/cases/user/${userId}`),
     getByLawyer: (lawyerId) => api.get(`/cases/lawyer/${lawyerId}`),
-    getUnassigned: () => api.get('/cases/unassigned'), // Fixed endpoint to match controller
+    getUnassigned: () => api.get('/cases/unassigned'),
+    getRecommended: (lawyerId) => api.get(`/cases/recommended/${lawyerId}`),
     assignLawyer: (caseId, lawyerId) => api.post(`/cases/${caseId}/assign`, { lawyerId }),
     updateSolution: (caseId, solution) => api.put(`/cases/${caseId}/solution`, { solution }),
     updateStatus: (caseId, status) => api.put(`/cases/${caseId}/status`, { status }),
+};
+
+export const lawyersApi = {
+    getProfile: (lawyerId) => api.get(`/lawyers/${lawyerId}/profile`),
+    updateProfile: (lawyerId, profileData) => api.put(`/lawyers/${lawyerId}/profile`, profileData),
 };
 
 export const messagesApi = {

@@ -5,15 +5,17 @@ public class CaseRequest {
     private String caseTitle;
     private String caseType;
     private String description;
+    private String caseCategory;
 
     // Constructors
     public CaseRequest() {}
 
-    public CaseRequest(Long userId, String caseTitle, String caseType, String description) {
+    public CaseRequest(Long userId, String caseTitle, String caseType, String description, String caseCategory) {
         this.userId = userId;
         this.caseTitle = caseTitle;
         this.caseType = caseType;
         this.description = description;
+        this.caseCategory = caseCategory;
     }
 
     // Getters and Setters
@@ -47,6 +49,14 @@ public class CaseRequest {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getCaseCategory() {
+        return caseCategory;
+    }
+
+    public void setCaseCategory(String caseCategory) {
+        this.caseCategory = caseCategory;
     }
 }
 
