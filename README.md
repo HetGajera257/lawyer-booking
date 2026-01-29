@@ -1,6 +1,6 @@
 # 🏛️ Lawyer Booking System
 
-A full-stack web application for lawyer booking, case management, and audio processing with AI-powered privacy protection.
+A comprehensive full-stack web application for lawyer booking, case management, and intelligent audio processing with AI-powered privacy protection.
 
 ## 📋 Table of Contents
 
@@ -14,6 +14,7 @@ A full-stack web application for lawyer booking, case management, and audio proc
 - [Project Structure](#project-structure)
 - [Security](#security)
 - [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
 
 ## ✨ Features
 
@@ -29,30 +30,36 @@ A full-stack web application for lawyer booking, case management, and audio proc
 - **Messaging System**: Real-time communication between users and lawyers
 - **Appointment Booking**: Schedule and manage appointments
 - **Lawyer Availability**: Manage lawyer schedules and availability
+- **Admin Dashboard**: Comprehensive admin panel for system management
 
 ### Security Features
 - BCrypt password hashing
 - JWT token-based authentication
-- Role-based access control
+- Role-based access control (User, Lawyer, Admin)
 - Input validation and sanitization
 - Global exception handling
+- Rate limiting for API endpoints
 
 ## 🛠️ Technology Stack
 
 ### Backend
-- **Framework**: Spring Boot 4.0.0
+- **Framework**: Spring Boot 3.4.1
 - **Language**: Java 17
 - **Database**: MySQL 8.0+
 - **ORM**: JPA/Hibernate
 - **Security**: Spring Security + JWT
 - **API Documentation**: Swagger/OpenAPI 3.0
+- **WebSocket**: Real-time communication
+- **Rate Limiting**: Bucket4j
 - **Logging**: SLF4J/Logback
 
 ### Frontend
 - **Framework**: React 18.2.0
 - **Routing**: React Router DOM 6.20.0
-- **HTTP Client**: Fetch API
+- **HTTP Client**: Axios
 - **UI**: Custom CSS + React Toastify
+- **WebSocket**: STOMP.js + SockJS
+- **Loading**: React Loading Skeleton
 
 ### External Services
 - **OpenAI Whisper API**: Audio transcription
@@ -75,7 +82,7 @@ Before you begin, ensure you have the following installed:
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/HetGajera257/lawyer-booking.git
 cd lawyer-booking
 ```
 
@@ -95,7 +102,7 @@ spring.datasource.password=your_password
 
 3. **Run Schema Scripts** (optional - JPA will auto-create tables):
 ```bash
-mysql -u your_username -p legal_connect_db < backend/src/main/resources/schema_back.sql
+mysql -u your_username -p legal_connect_db < create_admin.sql
 ```
 
 ### 3. Backend Configuration
@@ -129,7 +136,7 @@ npm install
 
 2. **Configure API Base URL** (if needed):
    - Default: `http://localhost:8080`
-   - Update in component files if backend runs on different port
+   - Update in `src/utils/api.js` if backend runs on different port
 
 ## ⚙️ Configuration
 
@@ -193,6 +200,7 @@ Once the backend is running, access Swagger UI:
 - `POST /api/auth/user/login` - User login
 - `POST /api/auth/lawyer/register` - Lawyer registration
 - `POST /api/auth/lawyer/login` - Lawyer login
+- `POST /api/auth/admin/login` - Admin login
 
 #### Audio Processing
 - `POST /api/audio/upload` - Upload and process audio
@@ -227,18 +235,25 @@ lawyer-booking/
 │   │   ├── exception/       # Custom exceptions
 │   │   ├── filter/          # JWT filter
 │   │   ├── repository/      # JPA repositories
+│   │   ├── security/        # Security components
 │   │   ├── service/         # Business logic
 │   │   └── util/            # Utilities
 │   └── src/main/resources/
 │       ├── application.properties
 │       └── application-local.properties
 │
-└── frontend/
-    ├── src/
-    │   ├── components/      # React components
-    │   ├── utils/           # Utilities
-    │   └── App.js           # Main app
-    └── package.json
+├── frontend/
+│   ├── src/
+│   │   ├── components/      # React components
+│   │   ├── context/         # React context
+│   │   ├── hooks/           # Custom hooks
+│   │   ├── utils/           # Utilities
+│   │   └── App.js           # Main app
+│   └── package.json
+│
+├── create_admin.sql         # Admin user creation script
+├── .gitignore              # Git ignore file
+└── README.md               # This file
 ```
 
 ## 🔒 Security
@@ -250,6 +265,8 @@ lawyer-booking/
 - ✅ Input validation
 - ✅ SQL injection prevention (JPA)
 - ✅ Global exception handling
+- ✅ Rate limiting
+- ✅ Role-based access control
 
 ### Security Best Practices
 1. **Never commit** `application-local.properties` with real API keys
@@ -316,22 +333,31 @@ npm install
 - Add JavaDoc comments for public methods
 - Use custom exceptions for error handling
 
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
 ## 📄 License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 👥 Contributors
 
-- Your Name - Initial work
+- **Het Gajera** - *Initial work* - [HetGajera257](https://github.com/HetGajera257)
 
 ## 🙏 Acknowledgments
 
 - OpenAI for API services
 - Spring Boot team
 - React team
+- All contributors
 
 ---
 
 **For detailed API documentation, visit**: http://localhost:8080/swagger-ui.html
 
-**For support, contact**: support@legalconnect.com
+**For support, contact**: [Create an issue](https://github.com/HetGajera257/lawyer-booking/issues)
