@@ -357,7 +357,3 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - All contributors
 
 ---
-
-**For detailed API documentation, visit**: http://localhost:8080/swagger-ui.html
-
-**For support, contact**: [Create an issue](https://github.com/HetGajera257/lawyer-booking/issues)
